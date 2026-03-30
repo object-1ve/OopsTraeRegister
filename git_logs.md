@@ -12,3 +12,6 @@
 - run_flow.py 版本更新为 1.0.3，支持命令行指定邮箱、重试取码并输出结构化结果
 - run_flow.py 版本更新为 1.0.4，新增关键调试输出（发码返回码、邮箱提取、取码重试与错误信息）
 - getmail.py 版本更新为 1.0.4，邮件读取改为先请求 /api/fetch 再按 id 请求 /api/fetch/{id}
+- run_flow.py 版本更新为 1.0.5，新增参考 register.py 的注册请求流程
+- run_flow.py 新增注册阶段调试与结果输出字段（register_status/register_text/register_error）
+- run_flow.py 版本更新为 1.0.6，最终结果新增账号和密码字段输出（account/password）

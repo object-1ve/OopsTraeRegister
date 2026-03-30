@@ -1,18 +1,7 @@
-import json
-import re
-import subprocess
-import sys
-import time
-from pathlib import Path
-
-from getmail import fetch_latest_mail_content
-from getmail import generate_email
 import requests
 
-SCRIPT_VERSION = "1.0.6"
-EMAIL_PATTERN = re.compile(r"[a-z0-9]{8}@sunix\.eu\.org")
-REGISTER_URL = "https://www.trae.ai/passport/web/email/register_verify_login/"
-REGISTER_HEADERS = {
+
+headers = {
     "accept": "application/json, text/javascript",
     "accept-language": "zh-CN,zh;q=0.9",
     "content-type": "application/x-www-form-urlencoded",
@@ -28,7 +17,7 @@ REGISTER_HEADERS = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
     "x-tt-passport-csrf-token": "5efeeb0cbdf87969ddb46ea47f4018c0"
 }
-REGISTER_COOKIES = {
+cookies = {
     "i18next": "en",
     "s_v_web_id": "verify_mnd4zpeo_VfI7oBUi_fWUJ_4kHS_9XmO_8riTyA2Pe1Rg",
     "passport_csrf_token": "5efeeb0cbdf87969ddb46ea47f4018c0",
@@ -58,7 +47,8 @@ REGISTER_COOKIES = {
     "_ga_GF2YEJBQ7P": "GS2.1.s1774874986$o2$g1$t1774875126$j59$l0$h0",
     "_ga_JVLR55T34K": "GS2.1.s1774874986$o2$g1$t1774875126$j59$l0$h153438055"
 }
-REGISTER_PARAMS = {
+url = "https://www.trae.ai/passport/web/email/register_verify_login/"
+params = {
     "aid": "677332",
     "account_sdk_source": "web",
     "sdk_version": "2.1.10-tiktok",
@@ -70,118 +60,14 @@ REGISTER_PARAMS = {
     "X-Bogus": "DFSzswVL2CHa0MkTCqc9AY8obR1r",
     "X-Gnarly": "MCkgPwsyxnAsSi1zPptqihoxRdXrK5rOLuqRMxKJf4hJ-C-9osNKjJgEvuPeHyl7JfHH-4UCi5ltavFNsG-algebWvHBTwgwzXlMzNvm8ho2FS58oSPDgoecIsDgb3pCA-T4oURrMtITqPF4PNEUVE4VEB9b6smT4/RqXwW4sohNkWyBHRfvhowk-lcb0CzRBXGvFS/dtR6LZfbbV/4-0M/NnDFFcMtFepyAFNyiaKK6D2CRb/GJHFEshxm74tv3lUUycOQfb/KX7KVBCErajxZ0V/M3aSVMIHjJZAvFD7NX"
 }
+data = {
+    "type": "1",
+    "email": "mwxos9mn@sunix.eu.org",
+    "password": "qwe123456",
+    "code": "426378",
+    "email_logic_type": "2"
+}
+response = requests.post(url, headers=headers, cookies=cookies, params=params, data=data)
 
-
-def send_code_and_get_email():
-    print("[debug] start send code", flush=True)
-    script_path = Path(__file__).with_name("getCode.py")
-    result = subprocess.run(
-        [sys.executable, str(script_path)],
-        capture_output=True,
-        text=True,
-        encoding="utf-8"
-    )
-    output = (result.stdout or "") + "\n" + (result.stderr or "")
-    print(f"[debug] send code return code: {result.returncode}", flush=True)
-    match = EMAIL_PATTERN.search(output)
-    email = match.group(0) if match else None
-    print(f"[debug] extracted email from output: {email}", flush=True)
-    return email, result.returncode, output.strip()
-
-
-def fetch_code_with_retry(email, retries=8, interval=2):
-    latest_meta = None
-    detail = None
-    code = None
-    last_error = None
-    for index in range(retries):
-        print(f"[debug] fetch try {index + 1}/{retries}, email={email}", flush=True)
-        try:
-            latest_meta, detail, code = fetch_latest_mail_content(email)
-            last_error = None
-            latest_id = latest_meta.get("id") if isinstance(latest_meta, dict) else None
-            print(f"[debug] latest id: {latest_id}, code: {code}", flush=True)
-        except requests.exceptions.RequestException as error:
-            last_error = f"{type(error).__name__}: {error}"
-            print(f"[debug] fetch error: {last_error}", flush=True)
-            time.sleep(interval)
-            continue
-        if code:
-            return latest_meta, detail, code, last_error
-        time.sleep(interval)
-    return latest_meta, detail, code, last_error
-
-
-def register_account(email, code, password):
-    print(f"[debug] start register, email={email}, code={code}", flush=True)
-    session = requests.Session()
-    session.trust_env = False
-    response = session.post(
-        REGISTER_URL,
-        headers=REGISTER_HEADERS,
-        cookies=REGISTER_COOKIES,
-        params=REGISTER_PARAMS,
-        data={
-            "type": "1",
-            "email": email,
-            "password": password,
-            "code": code,
-            "email_logic_type": "2"
-        },
-        timeout=20,
-        proxies={"http": None, "https": None}
-    )
-    print(f"[debug] register status: {response.status_code}", flush=True)
-    return response
-
-
-def main():
-    forced_email = sys.argv[1] if len(sys.argv) > 1 else None
-    password = sys.argv[2] if len(sys.argv) > 2 else "qwe123456"
-    if forced_email:
-        email = forced_email
-        code_return_code = None
-        code_output = None
-        print(f"[debug] use forced email: {email}", flush=True)
-    else:
-        email, code_return_code, code_output = send_code_and_get_email()
-        if not email:
-            email = generate_email()
-            print(f"[debug] fallback generated email: {email}", flush=True)
-    print(f"[debug] begin fetch code for email: {email}", flush=True)
-    latest_meta, detail, code, fetch_error = fetch_code_with_retry(email=email)
-    register_status = None
-    register_text = None
-    register_error = None
-    if code:
-        try:
-            register_response = register_account(email=email, code=code, password=password)
-            register_status = register_response.status_code
-            register_text = register_response.text
-        except requests.exceptions.RequestException as error:
-            register_error = f"{type(error).__name__}: {error}"
-    print(
-        json.dumps(
-            {
-                "script_version": SCRIPT_VERSION,
-                "account": email,
-                "password": password,
-                "email": email,
-                "code": code,
-                "latest": latest_meta,
-                "has_detail": detail is not None,
-                "fetch_error": fetch_error,
-                "register_status": register_status,
-                "register_text": register_text,
-                "register_error": register_error,
-                "send_code_return_code": code_return_code,
-                "send_code_output": code_output
-            },
-            ensure_ascii=False,
-            indent=2
-        )
-    )
-
-
-if __name__ == "__main__":
-    main()
+print(response.text)
+print(response)
