@@ -1,0 +1,14 @@
+## 2026-03-30
+- 1.py 版本更新为 1.0.1
+- 将请求改为使用 Session 并禁用环境代理读取
+- 为请求增加 timeout 和显式 proxies，避免系统代理导致的 SSL EOF ProxyError
+- 增加异常捕获输出，便于定位网络异常
+- 新增 getmail.py，版本 1.0.1，生成 8 位小写字母和数字邮箱前缀
+- getCode.py 版本更新为 1.0.2，并接入 getmail.generate_email 动态生成邮箱
+- getmail.py 版本更新为 1.0.3，新增通过 to+id 两步拉取邮件详情流程
+- getmail.py 新增验证码提取能力，可从邮件 HTML 中提取 6 位验证码
+- getmail.py 支持命令行传入目标邮箱；网络层新增 SSL 失败自动降级重试
+- 新增 run_flow.py，版本 1.0.1，串联 getCode.py 发码与 getmail.py 取码
+- run_flow.py 版本更新为 1.0.3，支持命令行指定邮箱、重试取码并输出结构化结果
+- run_flow.py 版本更新为 1.0.4，新增关键调试输出（发码返回码、邮箱提取、取码重试与错误信息）
+- getmail.py 版本更新为 1.0.4，邮件读取改为先请求 /api/fetch 再按 id 请求 /api/fetch/{id}
