@@ -8,10 +8,38 @@ from playwright.sync_api import sync_playwright
 
 
 TARGET_PATH_FRAGMENT = "/passport/web/email/send_code"
+EMAIL_INPUT_XPATH = "//*[@id=\"root\"]/div[1]/div[2]/div[4]/div[1]/div[1]/input"
+SEND_CODE_XPATH = "//*[@id=\"root\"]/div[1]/div[2]/div[4]/div[2]/div[1]/div[2]"
+AUTO_EMAIL = "123456@qq.com"
+AUTO_RETRY_SECONDS = 20
 
 
 def parse_query(url):
     return dict(parse_qsl(urlsplit(url).query, keep_blank_values=True))
+
+
+def fill_email_and_click_send_code(page):
+    deadline = time.monotonic() + AUTO_RETRY_SECONDS
+    while time.monotonic() < deadline:
+        try:
+            page.wait_for_timeout(1000)
+            page.wait_for_load_state("domcontentloaded", timeout=5000)
+            email_input = page.locator(f"xpath={EMAIL_INPUT_XPATH}")
+            send_button = page.locator(f"xpath={SEND_CODE_XPATH}")
+            email_input.wait_for(state="visible", timeout=5000)
+            email_input.fill(AUTO_EMAIL, timeout=5000)
+            if email_input.input_value(timeout=3000) != AUTO_EMAIL:
+                page.wait_for_timeout(400)
+                continue
+            email_input.press("Tab")
+            page.wait_for_timeout(300)
+            send_button.wait_for(state="visible", timeout=3000)
+            send_button.click(timeout=3000)
+            page.wait_for_timeout(500)
+            return True
+        except Exception:
+            page.wait_for_timeout(500)
+    return False
 
 
 def main():
@@ -53,11 +81,16 @@ def main():
 
         page.on("request", on_request)
         page.goto("https://www.trae.ai/sign-up", wait_until="domcontentloaded")
-        print("已打开注册页。请在页面触发一次发送验证码请求。")
+        clicked = fill_email_and_click_send_code(page)
+        if clicked:
+            print(f"已自动填入邮箱: {AUTO_EMAIL}")
+            print("已自动点击 Send Code。")
+        else:
+            print("自动点击失败，将继续监听页面请求，建议手动点击 Send Code。")
         print("抓到请求后会自动写入 captured_send_code_params.json，然后关闭浏览器结束。")
-        print("若 120 秒未抓到，会输出 captured_send_code_debug.json 供排查。")
+        print("若 20 秒未抓到，会输出 captured_send_code_debug.json 供排查。")
 
-        deadline = time.monotonic() + 120
+        deadline = time.monotonic() + 20
         while not captured["matched"] and time.monotonic() < deadline:
             page.wait_for_timeout(500)
         if not captured["matched"]:
