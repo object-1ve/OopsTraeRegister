@@ -63,7 +63,7 @@ params = {
 data = {
     "type": "1",
     "email": "mwxos9mn@sunix.eu.org",
-    "password": "qwe123456",
+    "password": "1234567q",
     "code": "426378",
     "email_logic_type": "2"
 }

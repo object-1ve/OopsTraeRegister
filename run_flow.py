@@ -173,7 +173,7 @@ def save_success_account(email, password):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("forced_email", nargs="?", default=None)
-    parser.add_argument("password", nargs="?", default="qwe123456")
+    parser.add_argument("password", nargs="?", default="1234567q")
     parser.add_argument("-n", "--count", type=int, default=1)
     parser.add_argument("-t", "--threads", type=int, default=3)
     return parser.parse_args()

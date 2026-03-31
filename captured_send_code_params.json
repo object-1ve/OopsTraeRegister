@@ -1,0 +1,42 @@
+{
+  "matched": true,
+  "captured_at": "2026-03-31_21-36-55",
+  "url": "https://ug-normal.trae.ai/passport/web/email/send_code?aid=677332&account_sdk_source=web&sdk_version=2.1.10-tiktok&language=en&verifyFp=verify_mnenv4ty_SYRIebC3_AxOC_4pzB_A2KA_mKHbRvgp5VkX&sign=a1bcd5808fa7373a896a2eb4471f32651746ec22effb96feb86335154a20aa57&qs=6466666a706b715a76616e5a766a7077666029646c612969646b62706462602976616e5a736077766c6a6b297360776c637c4375&msToken=YUZ3Jcw5dy2VpYkbRKn9j1QFKxgXYP-C4Cm5QaUx34nkkxXqsniwKfoi37lR9X6mz1D0V-jhuLF2HAVURaxHTyoiW4GxuMfQI2KJZ2q1NGYQ4TlaiNg-kGK7rcaKBsf1CahkJKU=&X-Bogus=DFSzswRLyKhgV4mECqSsoK8obRXh&X-Gnarly=M5OCa1UPako5nQibMKuCbudKgCYqTOtQVUtiih98E-gGjQVgolk-ZjmNFR-k/O4zBjQW8iwGq4Wj-ZUbNFQsIBOBdFbsVv9hfEWZj-hvqK4p2OPmFmtRBsNE698hHbYaUekRDK4pkCCbyymbYA3caJACRwwODhap8svMqjIVMNxALbGG0jWDXDjxDYxW31wC4MewDoCxO4oBo1/TWvYCdZiPhAStDFdr/6cCCctgQccvI-nnGQM6mgH9ac7gxF24mKVcNhmWjKZqCCQlMkGH2HIJEhWlOEEryLxcVxLGJzzH",
+  "method": "POST",
+  "params": {
+    "aid": "677332",
+    "account_sdk_source": "web",
+    "sdk_version": "2.1.10-tiktok",
+    "language": "en",
+    "verifyFp": "verify_mnenv4ty_SYRIebC3_AxOC_4pzB_A2KA_mKHbRvgp5VkX",
+    "sign": "a1bcd5808fa7373a896a2eb4471f32651746ec22effb96feb86335154a20aa57",
+    "qs": "6466666a706b715a76616e5a766a7077666029646c612969646b62706462602976616e5a736077766c6a6b297360776c637c4375",
+    "msToken": "YUZ3Jcw5dy2VpYkbRKn9j1QFKxgXYP-C4Cm5QaUx34nkkxXqsniwKfoi37lR9X6mz1D0V-jhuLF2HAVURaxHTyoiW4GxuMfQI2KJZ2q1NGYQ4TlaiNg-kGK7rcaKBsf1CahkJKU=",
+    "X-Bogus": "DFSzswRLyKhgV4mECqSsoK8obRXh",
+    "X-Gnarly": "M5OCa1UPako5nQibMKuCbudKgCYqTOtQVUtiih98E-gGjQVgolk-ZjmNFR-k/O4zBjQW8iwGq4Wj-ZUbNFQsIBOBdFbsVv9hfEWZj-hvqK4p2OPmFmtRBsNE698hHbYaUekRDK4pkCCbyymbYA3caJACRwwODhap8svMqjIVMNxALbGG0jWDXDjxDYxW31wC4MewDoCxO4oBo1/TWvYCdZiPhAStDFdr/6cCCctgQccvI-nnGQM6mgH9ac7gxF24mKVcNhmWjKZqCCQlMkGH2HIJEhWlOEEryLxcVxLGJzzH"
+  },
+  "headers": {
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://www.trae.ai/",
+    "sec-ch-ua": "\"Not=A?Brand\";v=\"24\", \"Chromium\";v=\"140\"",
+    "x-tt-passport-ttwid-ticket": "AZST-DDgW7rFySwhRI94cD_Au57rApvl54cr04mxm1M6QJOyoYu-inj2qlRVvP-peA==",
+    "sec-ch-ua-mobile": "?0",
+    "x-tt-passport-csrf-token": "d4214cebbc3261e407717692ecf96d9e",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "accept": "application/json, text/javascript",
+    "content-type": "application/x-www-form-urlencoded"
+  },
+  "post_data": {
+    "type": "1",
+    "email": "21341213@qweq.com",
+    "email_logic_type": "2"
+  },
+  "cookies": {
+    "i18next": "en",
+    "ttwid": "1%7CqOdgsB2uqWDapkX_I6ZeOaCFpGNVCtUFyPXLpstlQyU%7C1774964144%7C45c91b6a9deb29cb2c0c9084523427fe5a88d0ae4bd91a4d30177e73283d4e62",
+    "msToken": "vnnqNIqGiAJmSMt5LEpVQLqPXSgpjnFwf1JTEBBOf5DuMpBbt4soKFy7_JyQeW2Tq2_MZgYNztiiwQe2jzfWocsvwi3AJp0sPqiHCXx0eB4D1nCxxWHN5t64_tEUATrHzGSFYW4=",
+    "s_v_web_id": "verify_mnenv4ty_SYRIebC3_AxOC_4pzB_A2KA_mKHbRvgp5VkX",
+    "passport_csrf_token": "d4214cebbc3261e407717692ecf96d9e",
+    "passport_csrf_token_default": "d4214cebbc3261e407717692ecf96d9e"
+  }
+}
