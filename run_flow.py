@@ -1,16 +1,22 @@
+import argparse
 import json
 import re
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from datetime import datetime
 
 from getmail import fetch_latest_mail_content
 from getmail import generate_email
 import requests
 
-SCRIPT_VERSION = "1.0.6"
+SCRIPT_VERSION = "1.0.9"
 EMAIL_PATTERN = re.compile(r"[a-z0-9]{8}@sunix\.eu\.org")
+SUCCESS_ACCOUNTS_FILE = "success_accounts.json"
+SUCCESS_ACCOUNTS_LOCK = threading.Lock()
 REGISTER_URL = "https://www.trae.ai/passport/web/email/register_verify_login/"
 REGISTER_HEADERS = {
     "accept": "application/json, text/javascript",
@@ -135,47 +141,130 @@ def register_account(email, code, password):
     return response
 
 
-def main():
-    forced_email = sys.argv[1] if len(sys.argv) > 1 else None
-    password = sys.argv[2] if len(sys.argv) > 2 else "qwe123456"
+def save_success_account(email, password):
+    save_path = Path(__file__).with_name(SUCCESS_ACCOUNTS_FILE)
+    with SUCCESS_ACCOUNTS_LOCK:
+        if save_path.exists():
+            try:
+                existing = json.loads(save_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                existing = []
+        else:
+            existing = []
+        if not isinstance(existing, list):
+            existing = []
+        for item in existing:
+            if isinstance(item, dict):
+                created_at = item.get("created_at")
+                if isinstance(created_at, int):
+                    item["created_at"] = datetime.fromtimestamp(created_at).strftime("%Y-%m-%d_%H-%M-%S")
+        existing.append(
+            {
+                "account": email,
+                "password": password,
+                "created_at": datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            }
+        )
+        save_path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[debug] saved success account: {save_path}", flush=True)
+    return str(save_path)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("forced_email", nargs="?", default=None)
+    parser.add_argument("password", nargs="?", default="qwe123456")
+    parser.add_argument("-n", "--count", type=int, default=1)
+    parser.add_argument("-t", "--threads", type=int, default=3)
+    return parser.parse_args()
+
+
+def run_single_flow(forced_email, password, worker_index):
     if forced_email:
         email = forced_email
         code_return_code = None
         code_output = None
-        print(f"[debug] use forced email: {email}", flush=True)
+        print(f"[debug][worker-{worker_index}] use forced email: {email}", flush=True)
     else:
         email, code_return_code, code_output = send_code_and_get_email()
         if not email:
             email = generate_email()
-            print(f"[debug] fallback generated email: {email}", flush=True)
-    print(f"[debug] begin fetch code for email: {email}", flush=True)
+            print(f"[debug][worker-{worker_index}] fallback generated email: {email}", flush=True)
+    print(f"[debug][worker-{worker_index}] begin fetch code for email: {email}", flush=True)
     latest_meta, detail, code, fetch_error = fetch_code_with_retry(email=email)
     register_status = None
     register_text = None
     register_error = None
+    register_success = False
     if code:
         try:
             register_response = register_account(email=email, code=code, password=password)
             register_status = register_response.status_code
             register_text = register_response.text
+            if register_status == 200:
+                register_payload = register_response.json()
+                if register_payload.get("message") == "success":
+                    save_success_account(email=email, password=password)
+                    register_success = True
         except requests.exceptions.RequestException as error:
             register_error = f"{type(error).__name__}: {error}"
+        except ValueError as error:
+            register_error = f"{type(error).__name__}: {error}"
+    return {
+        "script_version": SCRIPT_VERSION,
+        "worker_index": worker_index,
+        "account": email,
+        "password": password,
+        "email": email,
+        "code": code,
+        "latest": latest_meta,
+        "has_detail": detail is not None,
+        "fetch_error": fetch_error,
+        "register_status": register_status,
+        "register_success": register_success,
+        "register_text": register_text,
+        "register_error": register_error,
+        "send_code_return_code": code_return_code,
+        "send_code_output": code_output
+    }
+
+
+def main():
+    args = parse_args()
+    count = max(1, args.count)
+    threads = max(1, args.threads)
+    if args.forced_email and count > 1:
+        count = 1
+    if count == 1:
+        result = run_single_flow(
+            forced_email=args.forced_email,
+            password=args.password,
+            worker_index=1
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+    max_workers = min(threads, count)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [
+            executor.submit(
+                run_single_flow,
+                forced_email=None,
+                password=args.password,
+                worker_index=index + 1
+            )
+            for index in range(count)
+        ]
+        results = [future.result() for future in as_completed(futures)]
+    results.sort(key=lambda item: item["worker_index"])
+    success_count = sum(1 for item in results if item.get("register_success"))
     print(
         json.dumps(
             {
                 "script_version": SCRIPT_VERSION,
-                "account": email,
-                "password": password,
-                "email": email,
-                "code": code,
-                "latest": latest_meta,
-                "has_detail": detail is not None,
-                "fetch_error": fetch_error,
-                "register_status": register_status,
-                "register_text": register_text,
-                "register_error": register_error,
-                "send_code_return_code": code_return_code,
-                "send_code_output": code_output
+                "count": count,
+                "threads": max_workers,
+                "success_count": success_count,
+                "results": results
             },
             ensure_ascii=False,
             indent=2
